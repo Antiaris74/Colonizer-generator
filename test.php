@@ -24,6 +24,6 @@ wo - wool - 4
 d - desert - 1 - center
  */
 
-$field = Field::getInstance();
+$field = new Field('standard');
 $field->fill();
 $field->printFill();

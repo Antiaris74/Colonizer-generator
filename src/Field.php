@@ -4,7 +4,6 @@ namespace Colonizer;
 class Field
 {
     private const EVERY_ROW_LENGTH = [3,4,5,4,3];
-    private static $instance;
 
     /**
      * @var Row[]
@@ -13,36 +12,38 @@ class Field
 
     private $strategy;
 
-    private function __construct()
+    public function __construct($strategy)
     {
-        $this->strategy = new Strategy('high');
+        $this->strategy = new Strategy($strategy);
 
         foreach (self::EVERY_ROW_LENGTH as $rowLength) {
             $this->rows[] = new Row($rowLength);
         }
     }
 
-    public static function getInstance() : Field
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-
-        return self::$instance;
-    }
-
     public function fill() : void
     {
-        foreach ($this->rows as $rowNum => $row) {
-            for ($i = 0; $i < self::EVERY_ROW_LENGTH[$rowNum]; $i++) {
-                $availableResource = $this->strategy->guessResource(
-                    $this->getRowNeighbours($rowNum, $row->getCurrentFillPosition())
-                );
+        $fieldsNotFilled = true;
 
-                if ($availableResource !== false) {
-                    $row->addResources(new $availableResource());
+        while ($fieldsNotFilled) {
+            $fieldsNotFilled = false;
+            foreach ($this->rows as $rowNum => $row) {
+                $row->clean();
+                for ($i = 0; $i < self::EVERY_ROW_LENGTH[$rowNum]; $i++) {
+                    $availableResource = $this->strategy->guessResource(
+                        $this->getRowNeighbours($rowNum, $row->getCurrentFillPosition()),
+                        $rowNum,
+                        $row->getCurrentFillPosition()
+                    );
+
+                    if ($availableResource !== false) {
+                        $row->addResources(new $availableResource());
+                    } else {
+                        $fieldsNotFilled = true;
+                    }
                 }
             }
+            $this->strategy->reset();
         }
     }
 

@@ -1,9 +1,12 @@
 <?php
 namespace Colonizer;
 
+use Colonizer\Resources\Desert;
+
 class Strategy
 {
     public const STRATEGIES = [
+        'standard' => 'standard',
         'high' => 'high',
         'balance' => 'balance',
         'low' => 'low',
@@ -17,9 +20,11 @@ class Strategy
         Resources\Rock::class => 3,
         Resources\Desert::class => 1,
     ];
+
     private $strategy;
     private $usedResources = [];
     private $resources = [];
+    private $permutationId = 0;
 
     public function __construct($strategy)
     {
@@ -27,14 +32,14 @@ class Strategy
         $this->reset();
     }
 
-    public function guessResource($resources)
+    public function guessResource($resources, $row, $rowPosition)
     {
         $availableResources = $this->getAvailableResources($resources);
 
         if (!empty($availableResources)) {
             $usingResource = $this->strategies()
                 [$this->strategy]
-                ($availableResources, $resources, $this->usedResources);
+                ($availableResources, $resources, $this->usedResources, $row, $rowPosition);
 
             if (!array_key_exists($usingResource, $this->usedResources)) {
                 $this->usedResources[$usingResource] = 1;
@@ -56,7 +61,26 @@ class Strategy
     private function strategies() : array
     {
         return [
-            self::STRATEGIES['high'] => function ($availableResources, $neighbourResources, $usedResources) {
+            self::STRATEGIES['standard'] => function ($availableResources, $neighbourResources, $usedResources, $row, $rowPosition) {
+                if ($row === 2 && $rowPosition === 2) {
+                    return Desert::class;
+                }
+
+                if (array_key_exists(Desert::class, $availableResources)) {
+                    unset($availableResources[Desert::class]);
+                }
+
+                $maxResourceClass = null;
+
+                foreach ($availableResources as $resourceClass => $count) {
+                    if ($maxResourceClass === null || $count > $availableResources[$maxResourceClass]) {
+                        $maxResourceClass = $resourceClass;
+                    }
+                }
+
+                return $maxResourceClass;
+            },
+            self::STRATEGIES['high'] => function ($availableResources) {
                 $maxResourceClass = null;
 
                 foreach ($availableResources as $resourceClass => $count) {
@@ -86,7 +110,6 @@ class Strategy
                         $needResourceClass = $resourceClass;
                     }
                 }
-                print_r($availableResources);
                 return $needResourceClass;
             },
             self::STRATEGIES['low'] => function ($availableResources, $neighbourResources, $usedResources) {
@@ -103,10 +126,15 @@ class Strategy
         ];
     }
 
-    private function reset() : void
+    public function reset() : void
     {
         $this->resources = $this->startAvailableResources;
         $this->shuffleResource();
+    }
+
+    public function getResources()
+    {
+        return $this->resources;
     }
 
     private function getAvailableResources($resources) : array
@@ -126,6 +154,8 @@ class Strategy
 
     private function shuffleResource() : void
     {
+        //ToDo: array permutations
+
         $keys = array_keys($this->resources);
         shuffle($keys);
 

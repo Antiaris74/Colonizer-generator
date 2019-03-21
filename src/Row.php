@@ -42,6 +42,11 @@ class Row implements \ArrayAccess
         return false;
     }
 
+    public function clean()
+    {
+        $this->resources = [];
+    }
+
     public function getLength() : int
     {
         return $this->length;
