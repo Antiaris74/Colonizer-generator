@@ -4,6 +4,9 @@ namespace Colonizer;
 class Row implements \ArrayAccess
 {
     private $length;
+    /**
+     * @var Resource[]
+     */
     private $resources;
 
     public function __construct(int $length)

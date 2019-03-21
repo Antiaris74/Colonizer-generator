@@ -4,11 +4,11 @@ require_once 'vendor/autoload.php';
 use Colonizer\Field;
 
 /*
-  q w e
- q w e r
-q w e r t
- q w e r
-  q w e
+0   q w e
+1  q w e r
+2 q w e r t
+3  q w e r
+4   q w e
 
 q w e
 q w e r

@@ -11,21 +11,11 @@ class Field
      */
     private $rows;
 
-    /**
-     * @var Resource[]
-     */
-    private $resources = [
-        Resources\Wheat::class => 4,
-        Resources\Wood::class => 4,
-        Resources\Wool::class => 4,
-        Resources\Clay::class => 3,
-        Resources\Rock::class => 3,
-        Resources\Desert::class => 1,
-    ];
+    private $strategy;
 
     private function __construct()
     {
-        $this->shuffleResource();
+        $this->strategy = new Strategy('high');
 
         foreach (self::EVERY_ROW_LENGTH as $rowLength) {
             $this->rows[] = new Row($rowLength);
@@ -45,9 +35,7 @@ class Field
     {
         foreach ($this->rows as $rowNum => $row) {
             for ($i = 0; $i < self::EVERY_ROW_LENGTH[$rowNum]; $i++) {
-                $this->shuffleResource();
-
-                $availableResource = $this->getAvailableResource(
+                $availableResource = $this->strategy->guessResource(
                     $this->getRowNeighbours($rowNum, $row->getCurrentFillPosition())
                 );
 
@@ -75,16 +63,27 @@ class Field
     {
         //ToDo: Various optimizations for row searching like first or last row element
         if ($rowNum <= 2) {
-            return [
-                $this->rows[$rowNum - 1][$rowPosition - 1],
-                $this->rows[$rowNum - 1][$rowPosition],
-                $this->rows[$rowNum][$rowPosition - 1],
-                $this->rows[$rowNum][$rowPosition + 1],
-                $this->rows[$rowNum + 1][$rowPosition - 1],
-                $this->rows[$rowNum + 1][$rowPosition],
-            ];
-        } else {
-            return [
+            if ($rowPosition === 0 || $rowPosition === self::EVERY_ROW_LENGTH[$rowNum]) {
+                $rows = $this->getCornerPosition($rowNum, $rowPosition);
+            } elseif ($rowNum === 1 || $rowNum === 2) {
+                $rows = [
+                    $this->rows[$rowNum - 1][$rowPosition - 1],
+                    $this->rows[$rowNum - 1][$rowPosition],
+                    $this->rows[$rowNum][$rowPosition - 1],
+                    $this->rows[$rowNum][$rowPosition + 1],
+                    $this->rows[$rowNum + 1][$rowPosition - 1],
+                    $this->rows[$rowNum + 1][$rowPosition],
+                ];
+            } else {
+                $rows = [
+                    $this->rows[$rowNum][$rowPosition - 1],
+                    $this->rows[$rowNum][$rowPosition + 1],
+                    $this->rows[$rowNum + 1][$rowPosition - 1],
+                    $this->rows[$rowNum + 1][$rowPosition],
+                ];
+            }
+        } elseif ($rowNum === 3) {
+            $rows = [
                 $this->rows[$rowNum - 1][$rowPosition],
                 $this->rows[$rowNum - 1][$rowPosition + 1],
                 $this->rows[$rowNum][$rowPosition - 1],
@@ -92,42 +91,60 @@ class Field
                 $this->rows[$rowNum + 1][$rowPosition],
                 $this->rows[$rowNum + 1][$rowPosition + 1],
             ];
+        } else {
+            $rows = [
+                $this->rows[$rowNum - 1][$rowPosition],
+                $this->rows[$rowNum - 1][$rowPosition + 1],
+                $this->rows[$rowNum][$rowPosition - 1],
+                $this->rows[$rowNum][$rowPosition + 1],
+            ];
         }
+
+        return array_filter($rows);
     }
 
-    private function getAvailableResource($resources)
+    private function getCornerPosition($rowNum, $rowPosition) : array
     {
-        $resources = array_map('get_class', $resources);
+        $rows = [];
 
-        $maxResource = null;
+        if ($rowPosition === 0) {
+            $rows[] = $this->rows[$rowNum][$rowPosition+1];
 
-        foreach ($this->resources as $resourceClass => &$count) {
-            if (!\in_array($resourceClass, $resources, false) && $this->resources[$resourceClass] > $this->resources[$maxResource]) {
-                $maxResource = $resourceClass;
+            if ($rowNum === 0) {
+                $rows[] = $this->rows[$rowNum+1][$rowPosition];
+                $rows[] = $this->rows[$rowNum+1][$rowPosition+1];
+            } elseif ($rowNum === 2) {
+                $rows[] = $this->rows[$rowNum-1][$rowPosition];
+                $rows[] = $this->rows[$rowNum+1][$rowPosition];
+            } elseif ($rowNum === 4) {
+                $rows[] = $this->rows[$rowNum-1][$rowPosition];
+                $rows[] = $this->rows[$rowNum-1][$rowPosition+1];
+            } else {
+                $rows[] = $this->rows[$rowNum-1][$rowPosition];
+                $rows[] = $this->rows[$rowNum-1][$rowPosition+1];
+                $rows[] = $this->rows[$rowNum+1][$rowPosition];
+                $rows[] = $this->rows[$rowNum+1][$rowPosition+1];
+            }
+        } else {
+            $rows[] = $this->rows[$rowNum][$rowPosition-1];
+
+            if ($rowNum === 0) {
+                $rows[] = $this->rows[$rowNum+1][$rowPosition];
+                $rows[] = $this->rows[$rowNum+1][$rowPosition+1];
+            } elseif ($rowNum === 2) {
+                $rows[] = $this->rows[$rowNum-1][$rowPosition-1];
+                $rows[] = $this->rows[$rowNum+1][$rowPosition-1];
+            } elseif ($rowNum === 4) {
+                $rows[] = $this->rows[$rowNum-1][$rowPosition];
+                $rows[] = $this->rows[$rowNum-1][$rowPosition+1];
+            } else {
+                $rows[] = $this->rows[$rowNum-1][$rowPosition];
+                $rows[] = $this->rows[$rowNum-1][$rowPosition+1];
+                $rows[] = $this->rows[$rowNum+1][$rowPosition];
+                $rows[] = $this->rows[$rowNum+1][$rowPosition+1];
             }
         }
 
-        if ($maxResource !== null) {
-            $this->resources[$maxResource]--;
-            if ($this->resources[$maxResource] === 0) {
-                unset($this->resources[$maxResource]);
-            }
-            return $maxResource;
-        }
-
-        return false;
-    }
-
-    private function shuffleResource() : void
-    {
-        $keys = array_keys($this->resources);
-        shuffle($keys);
-
-        $random = [];
-        foreach ($keys as $key) {
-            $random[$key] = $this->resources[$key];
-        }
-
-        $this->resources = $random;
+        return $rows;
     }
 }
