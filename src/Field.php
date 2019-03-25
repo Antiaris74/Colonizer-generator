@@ -62,43 +62,29 @@ class Field
 
     private function getRowNeighbours($rowNum, $rowPosition) : array
     {
-        //ToDo: Various optimizations for row searching like first or last row element
+        $rows = [
+            $this->rows[$rowNum][$rowPosition - 1],
+            $this->rows[$rowNum][$rowPosition + 1]
+        ];
+
         if ($rowNum <= 2) {
             if ($rowPosition === 0 || $rowPosition === self::EVERY_ROW_LENGTH[$rowNum]) {
                 $rows = $this->getCornerPosition($rowNum, $rowPosition);
-            } elseif ($rowNum === 1 || $rowNum === 2) {
-                $rows = [
-                    $this->rows[$rowNum - 1][$rowPosition - 1],
-                    $this->rows[$rowNum - 1][$rowPosition],
-                    $this->rows[$rowNum][$rowPosition - 1],
-                    $this->rows[$rowNum][$rowPosition + 1],
-                    $this->rows[$rowNum + 1][$rowPosition - 1],
-                    $this->rows[$rowNum + 1][$rowPosition],
-                ];
             } else {
-                $rows = [
-                    $this->rows[$rowNum][$rowPosition - 1],
-                    $this->rows[$rowNum][$rowPosition + 1],
-                    $this->rows[$rowNum + 1][$rowPosition - 1],
-                    $this->rows[$rowNum + 1][$rowPosition],
-                ];
+                if ($rowNum === 1 || $rowNum === 2) {
+                    $rows[] = $this->rows[$rowNum - 1][$rowPosition - 1];
+                    $rows[] = $this->rows[$rowNum - 1][$rowPosition];
+                }
+                $rows[] = $this->rows[$rowNum + 1][$rowPosition - 1];
+                $rows[] = $this->rows[$rowNum + 1][$rowPosition];
             }
-        } elseif ($rowNum === 3) {
-            $rows = [
-                $this->rows[$rowNum - 1][$rowPosition],
-                $this->rows[$rowNum - 1][$rowPosition + 1],
-                $this->rows[$rowNum][$rowPosition - 1],
-                $this->rows[$rowNum][$rowPosition + 1],
-                $this->rows[$rowNum + 1][$rowPosition],
-                $this->rows[$rowNum + 1][$rowPosition + 1],
-            ];
         } else {
-            $rows = [
-                $this->rows[$rowNum - 1][$rowPosition],
-                $this->rows[$rowNum - 1][$rowPosition + 1],
-                $this->rows[$rowNum][$rowPosition - 1],
-                $this->rows[$rowNum][$rowPosition + 1],
-            ];
+            $rows[] = $this->rows[$rowNum - 1][$rowPosition];
+            $rows[] = $this->rows[$rowNum - 1][$rowPosition + 1];
+            if ($rowNum === 3) {
+                $rows[] = $this->rows[$rowNum + 1][$rowPosition];
+                $rows[] = $this->rows[$rowNum + 1][$rowPosition + 1];
+            }
         }
 
         return array_filter($rows);
