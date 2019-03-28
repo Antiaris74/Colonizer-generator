@@ -23,7 +23,15 @@ wh - wheat- 4
 wo - wool - 4
 d - desert - 1 - center
  */
+global $argv;
 
-$field = new Field('standard');
-$field->fill();
-$field->printFill();
+if (array_key_exists(1, $argv) && in_array($argv[1], \Colonizer\Strategy::STRATEGIES, true)) {
+    $field = new Field($argv[1]);
+    if ($field->fill()) {
+        $field->printFill();
+    } else {
+        echo 'No solution';
+    }
+} else {
+    echo 'No strategy';
+}

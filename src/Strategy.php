@@ -2,6 +2,8 @@
 namespace Colonizer;
 
 use Colonizer\Resources\Desert;
+use Colonizer\Resources\Rock;
+use Colonizer\Resources\Wheat;
 
 class Strategy
 {
@@ -12,7 +14,7 @@ class Strategy
         'low' => 'low',
     ];
 
-    private $startAvailableResources = [
+    private $availableResources = [
         Resources\Wheat::class => 4,
         Resources\Wood::class => 4,
         Resources\Wool::class => 4,
@@ -23,13 +25,15 @@ class Strategy
 
     private $strategy;
     private $usedResources = [];
+    private $startResources = [];
     private $resources = [];
     private $permutationId = 0;
 
     public function __construct($strategy)
     {
         $this->strategy = $strategy;
-        $this->reset();
+        $this->shuffleResource();
+        $this->startResources = $this->resources;
     }
 
     public function guessResource($resources, $row, $rowPosition)
@@ -40,6 +44,10 @@ class Strategy
             $usingResource = $this->strategies()
                 [$this->strategy]
                 ($availableResources, $resources, $this->usedResources, $row, $rowPosition);
+
+            if ($usingResource === false) {
+                return false;
+            }
 
             if (!array_key_exists($usingResource, $this->usedResources)) {
                 $this->usedResources[$usingResource] = 1;
@@ -94,7 +102,7 @@ class Strategy
             self::STRATEGIES['balance'] => function ($availableResources, $neighbourResources, $usedResources) {
                 $needResourceClass = null;
 
-                while (\count($usedResources) === $this->startAvailableResources ||
+                while (\count($usedResources) === $this->availableResources ||
                     empty(array_diff_key($availableResources, $usedResources))) {
                     foreach ($usedResources as $resource => &$count) {
                         $count--;
@@ -112,24 +120,27 @@ class Strategy
                 }
                 return $needResourceClass;
             },
-            self::STRATEGIES['low'] => function ($availableResources, $neighbourResources, $usedResources) {
+            self::STRATEGIES['low'] => function ($availableResources, $neighbourResources, $usedResources, $row, $rowPosition) {
                 $maxResourceClass = null;
+                $neighbourResources = array_map('get_class', $neighbourResources);
 
                 foreach ($availableResources as $resourceClass => $count) {
-                    if ($maxResourceClass === null || $count < $availableResources[$maxResourceClass]) {
-                        $maxResourceClass = $resourceClass;
+                    if (($resourceClass === Wheat::class && \in_array(Rock::class, $neighbourResources, true)) ||
+                        ($resourceClass === Rock::class && \in_array(Wheat::class, $neighbourResources, true))) {
+                        continue;
                     }
+
+                    return $resourceClass;
                 }
 
-                return $maxResourceClass;
+                return false;
             }
         ];
     }
 
     public function reset() : void
     {
-        $this->resources = $this->startAvailableResources;
-        $this->shuffleResource();
+        $this->resourcePermutation();
     }
 
     public function getResources()
@@ -152,18 +163,62 @@ class Strategy
         return $availableResources;
     }
 
+    private function resourcePermutation() : void
+    {
+        $resourceCount = \count($this->startResources);
+
+        if ($this->permutationId === $this->factorial($resourceCount) - 1) {
+            throw new \Exception('Out of permutations');
+        }
+
+        $this->permutationId++;
+
+        $tmpResources = [];
+        $resourcesByNum = array_keys($this->startResources);
+
+        $currentPermutationDigit = $this->permutationId;
+
+        do {
+            $resourceNum = $currentPermutationDigit % $resourceCount;
+            $resourceClass = $resourcesByNum[$resourceNum];
+
+            $tmpResources[$resourceClass] = $this->startResources[$resourceClass];
+            unset($resourcesByNum[$resourceNum]);
+            $currentPermutationDigit /= $resourceCount;
+            $resourceCount--;
+            $resourcesByNum = array_values($resourcesByNum);
+        } while ($currentPermutationDigit > 1);
+
+        foreach ($resourcesByNum as $resourceClass) {
+            $tmpResources[$resourceClass] = $this->startResources[$resourceClass];
+        }
+
+        $this->resources = $tmpResources;
+    }
+
     private function shuffleResource() : void
     {
-        //ToDo: array permutations
-
-        $keys = array_keys($this->resources);
+        $keys = array_keys($this->availableResources);
         shuffle($keys);
 
         $random = [];
         foreach ($keys as $key) {
-            $random[$key] = $this->resources[$key];
+            $random[$key] = $this->availableResources[$key];
         }
 
         $this->resources = $random;
+    }
+
+    private function factorial($num) : int
+    {
+        if ($num < 0) {
+            return 0;
+        }
+
+        if ($num === 0) {
+            return 1;
+        }
+
+        return $num*$this->factorial($num-1);
     }
 }

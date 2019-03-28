@@ -21,7 +21,7 @@ class Field
         }
     }
 
-    public function fill() : void
+    public function fill() : bool
     {
         $fieldsNotFilled = true;
 
@@ -43,8 +43,15 @@ class Field
                     }
                 }
             }
-            $this->strategy->reset();
+
+            try {
+                $this->strategy->reset();
+            } catch (\Exception $e) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     public function printFill() : void
@@ -58,6 +65,21 @@ class Field
             $spaceChars = str_repeat(' ', (9-\strlen($rowResourceChars))/2);
             echo $spaceChars.$rowResourceChars.PHP_EOL;
         }
+    }
+
+    public function getFill() : array
+    {
+        $data = [];
+
+        foreach ($this->rows as $rowNum => $row) {
+            $rowResourceChars = [];
+            foreach ($row->getResources() as $resource) {
+                $rowResourceChars[] = $resource->getChars();
+            }
+            $data[] = $rowResourceChars;
+        }
+
+        return $data;
     }
 
     private function getRowNeighbours($rowNum, $rowPosition) : array
