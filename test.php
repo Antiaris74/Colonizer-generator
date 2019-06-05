@@ -23,9 +23,14 @@ p - wheat- 4
 s - wool - 4
 d - desert - 1 - center
  */
-$field = new Field('standard');
-$field->fill();
-$fill = $field->getFill();
+$strategy = $_GET['strategy']?:'standard';
+if (array_key_exists($strategy, \Colonizer\Strategy::STRATEGIES)) {
+    $field = new Field($strategy);
+    $field->fill();
+    $fill = $field->getFill();
+} else {
+    die('No strategy');
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -80,17 +85,12 @@ $fill = $field->getFill();
         transform: rotate(-60deg);
     }
 
-    .hex:hover {
-        background: #F58787;
-        cursor: pointer;
-    }
-
     .invisible {
         visibility: hidden;
     }
 
     .hex-char-p {
-        background: #c7cc00;
+        background: #cccc00;
     }
 
     .hex-char-r {
@@ -98,19 +98,19 @@ $fill = $field->getFill();
     }
 
     .hex-char-w {
-        background: #00660d;
+        background: #006600;
     }
 
     .hex-char-c {
-        background: #cc6408;
+        background: #993300;
     }
 
     .hex-char-s {
-        background: #00cc3b;
+        background: #00cc33;
     }
 
     .hex-char-d {
-        background: #8c6b00;
+        background: #666600;
     }
 </style>
 <body>
