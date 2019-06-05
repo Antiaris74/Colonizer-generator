@@ -30,10 +30,12 @@ $fill = $field->getFill();
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head>
 <style>
     .container {
+        vertical-align: center;
         width: 1000px;
         line-height: 1.3;
     }
