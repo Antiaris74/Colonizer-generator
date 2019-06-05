@@ -23,21 +23,8 @@ p - wheat- 4
 s - wool - 4
 d - desert - 1 - center
  */
-global $argv;
-$fill = [];
-
-if (array_key_exists(1, $argv) && in_array($argv[1], \Colonizer\Strategy::STRATEGIES, true)) {
-    $field = new Field($argv[1]);
-    if ($field->fill()) {
-        $fill = $field->getFill();
-    } else {
-        echo 'No solution';
-        die();
-    }
-} else {
-    echo 'No strategy';
-    die();
-}
+$field = new Field('standard');
+$fill = $field->getFill();
 ?>
 <!DOCTYPE html>
 <html>
@@ -97,7 +84,7 @@ if (array_key_exists(1, $argv) && in_array($argv[1], \Colonizer\Strategy::STRATE
     }
 
     .invisible {
-        opacity: 100%;
+        visibility: hidden;
     }
 
     .hex-char-p {
