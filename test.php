@@ -24,6 +24,7 @@ s - wool - 4
 d - desert - 1 - center
  */
 $field = new Field('standard');
+$field->fill();
 $fill = $field->getFill();
 ?>
 <!DOCTYPE html>
