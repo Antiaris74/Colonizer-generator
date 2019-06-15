@@ -1,8 +1,15 @@
 <?php
 namespace Colonizer;
 
+/**
+ * Field class
+ * @package Colonizer
+ */
 class Field
 {
+    /**
+     * Row length
+     */
     private const EVERY_ROW_LENGTH = [3,4,5,4,3];
 
     /**
@@ -10,17 +17,28 @@ class Field
      */
     private $rows;
 
+    /**
+     * @var ResourceManager
+     */
     private $strategy;
 
+    /**
+     * Field constructor.
+     * @param $strategy
+     */
     public function __construct($strategy)
     {
-        $this->strategy = new Strategy($strategy);
+        $this->strategy = new ResourceManager($strategy);
 
         foreach (self::EVERY_ROW_LENGTH as $rowLength) {
             $this->rows[] = new Row($rowLength);
         }
     }
 
+    /**
+     * Field fill
+     * @return bool
+     */
     public function fill() : bool
     {
         $fieldsNotFilled = true;
@@ -37,7 +55,7 @@ class Field
                     );
 
                     if ($availableResource !== false) {
-                        $row->addResources(new $availableResource());
+                        $row->addHex($availableResource);
                     } else {
                         $fieldsNotFilled = true;
                     }
@@ -54,27 +72,18 @@ class Field
         return true;
     }
 
-    public function printFill() : void
-    {
-        foreach ($this->rows as $rowNum => $row) {
-            $rowResourceChars = [];
-            foreach ($row->getResources() as $resource) {
-                $rowResourceChars[] = $resource->getChars();
-            }
-            $rowResourceChars = implode(' ', $rowResourceChars);
-            $spaceChars = str_repeat(' ', (9-\strlen($rowResourceChars))/2);
-            echo $spaceChars.$rowResourceChars.PHP_EOL;
-        }
-    }
-
+    /**
+     * Get field result fill
+     * @return array
+     */
     public function getFill() : array
     {
         $data = [];
 
         foreach ($this->rows as $rowNum => $row) {
             $rowResourceChars = [];
-            foreach ($row->getResources() as $resource) {
-                $rowResourceChars[] = $resource->getChars();
+            foreach ($row->getHexes() as $hex) {
+                $rowResourceChars[] = $hex;
             }
             $data[] = $rowResourceChars;
         }
@@ -82,6 +91,12 @@ class Field
         return $data;
     }
 
+    /**
+     * Get hex neighbours
+     * @param $rowNum
+     * @param $rowPosition
+     * @return array
+     */
     private function getRowNeighbours($rowNum, $rowPosition) : array
     {
         $rows = [
@@ -112,6 +127,12 @@ class Field
         return array_filter($rows);
     }
 
+    /**
+     * Get row neighbours if hex in corner
+     * @param $rowNum
+     * @param $rowPosition
+     * @return array
+     */
     private function getCornerPosition($rowNum, $rowPosition) : array
     {
         $rows = [];

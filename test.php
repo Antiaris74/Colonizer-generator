@@ -23,11 +23,14 @@ p - wheat- 4
 s - wool - 4
 d - desert - 1 - center
  */
-$strategy = $_GET['strategy']?:'standard';
-if (array_key_exists($strategy, \Colonizer\Strategy::STRATEGIES)) {
+$strategy = array_key_exists('strategy', $_GET)?$_GET['strategy']:'standard';
+if (array_key_exists($strategy, \Colonizer\ResourceManager::STRATEGIES)) {
     $field = new Field($strategy);
-    $field->fill();
-    $fill = $field->getFill();
+    if ($field->fill()) {
+        $fill = $field->getFill();
+    } else {
+        die('No fill');
+    }
 } else {
     die('No strategy');
 }
@@ -112,18 +115,32 @@ if (array_key_exists($strategy, \Colonizer\Strategy::STRATEGIES)) {
     .hex-char-d {
         background: #666600;
     }
+    .digit {
+        position: absolute;
+        z-index: 100;
+        text-align: center;
+        writing-mode: vertical-rl;
+        font-size: 80px;
+        margin-top: 60px;
+    }
 </style>
 <body>
+<a href="/">Standard</a>
+<a href="/?strategy=balance">Balance</a>
 <div class="container">
     <?php
     $rowCount = 2;
-    foreach ($fill as $row) :?>
+    foreach ($fill as $rowNum => $row) :?>
     <ol class="<?=$rowCount%2 === 0?'odd':'even'?>">
         <?php if (\count($row) === 3) :?>
         <li class='hex invisible'></li>
         <?php endif;?>
-        <?php foreach ($row as $resource) :?>
-        <li class='hex hex-char-<?=$resource?>'></li>
+        <?php foreach ($row as $columnNum => $hex) :?>
+        <li class='hex hex-char-<?=$hex->getResource()->getChars()?>'>
+            <div class="digit">
+                <?=$hex->getNumber()?>
+            </div>
+        </li>
         <?php endforeach;?>
         <?php if (\count($row) === 3) :?>
         <li class='hex invisible'></li>

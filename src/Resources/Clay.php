@@ -5,6 +5,6 @@ use Colonizer\Resource;
 
 class Clay extends Resource
 {
-    protected $maximum = 3;
+    public static $maximum = 3;
     protected $chars = 'c';
 }

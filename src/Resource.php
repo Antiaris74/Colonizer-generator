@@ -1,25 +1,17 @@
 <?php
 namespace Colonizer;
 
+/**
+ * Abstract class for resource
+ * @package Colonizer
+ */
 abstract class Resource
 {
-    protected $maximum;
-    protected $current;
+    public static $maximum;
     protected $chars;
 
     public function __construct()
     {
-        $this->current = $this->maximum;
-    }
-
-    public function getMaximum()
-    {
-        return $this->maximum;
-    }
-
-    public function getAvailable()
-    {
-        return $this->current;
     }
 
     public function getChars()

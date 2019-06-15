@@ -5,6 +5,6 @@ use Colonizer\Resource;
 
 class Wheat extends Resource
 {
-    protected $maximum = 4;
+    public static $maximum = 4;
     protected $chars = 'p';
 }
